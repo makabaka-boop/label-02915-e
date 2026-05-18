@@ -7,10 +7,10 @@
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        <el-select v-model="query.category_id" placeholder="全部分类" clearable style="width: 160px" @change="loadData">
+        <el-select v-model="query.category_id" placeholder="全部分类" clearable style="width: 160px" @change="handleFilterChange">
           <el-option v-for="c in categoryList" :key="c.id" :label="c.name" :value="c.id" />
         </el-select>
-        <el-select v-model="query.status" placeholder="全部状态" clearable style="width: 130px" @change="loadData">
+        <el-select v-model="query.status" placeholder="全部状态" clearable style="width: 130px" @change="handleFilterChange">
           <el-option label="上架" :value="1" />
           <el-option label="下架" :value="0" />
         </el-select>
@@ -24,8 +24,8 @@
           <template #default="{ row }">
             <el-image
               v-if="row.image"
-              :src="row.image.startsWith('http') ? row.image : row.image"
-              :preview-src-list="[row.image.startsWith('http') ? row.image : row.image]"
+              :src="resolveImageUrl(row.image)"
+              :preview-src-list="[resolveImageUrl(row.image)]"
               fit="cover"
               style="width: 48px; height: 48px; border-radius: 8px;"
               preview-teleported
@@ -160,6 +160,15 @@ const loadData = async () => {
   const res = await getProducts(params)
   tableData.value = res.data.items
   total.value = res.data.total
+  if (query.page > 1 && res.data.items.length === 0) {
+    query.page = 1
+    return loadData()
+  }
+}
+
+const handleFilterChange = () => {
+  query.page = 1
+  loadData()
 }
 
 const loadCategories = async () => {
@@ -167,12 +176,15 @@ const loadCategories = async () => {
   categoryList.value = res.data
 }
 
+const resolveImageUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  if (url.startsWith('/uploads/')) return url
+  return `/api${url}`
+}
+
 const imagePreviewUrl = computed(() => {
-  if (!form.image) return ''
-  if (form.image.startsWith('http')) return form.image
-  // /uploads/ 路径由 nginx 直接代理到后端，不需要 /api 前缀
-  if (form.image.startsWith('/uploads/')) return form.image
-  return `/api${form.image}`
+  return resolveImageUrl(form.image)
 })
 
 const handleUpload = async ({ file }) => {
@@ -217,6 +229,9 @@ const handleSubmit = async () => {
 const handleDelete = async (id) => {
   await deleteProduct(id)
   ElMessage.success('删除成功')
+  if (tableData.value.length === 1 && query.page > 1) {
+    query.page -= 1
+  }
   loadData()
 }
 
