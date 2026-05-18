@@ -14,12 +14,16 @@
         @select="sidebarOpen = false"
       >
         <el-menu-item index="/products">
-          <el-icon><Goods /></el-icon>
+          <el-icon><Good /></el-icon>
           <span>商品管理</span>
         </el-menu-item>
         <el-menu-item index="/categories">
           <el-icon><Grid /></el-icon>
           <span>分类管理</span>
+        </el-menu-item>
+        <el-menu-item index="/users">
+          <el-icon><User /></el-icon>
+          <span>用户管理</span>
         </el-menu-item>
         <el-menu-item index="/logs">
           <el-icon><Document /></el-icon>
@@ -68,6 +72,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Good, Grid, Document, User, ArrowDown, SwitchButton } from '@element-plus/icons-vue'
 import { useUserStore } from '../stores/user'
 
 const route = useRoute()

@@ -1,9 +1,11 @@
 <template>
   <div class="page-card list-page-card">
     <div class="search-bar">
-      <el-select v-model="query.module" placeholder="全部模块" clearable style="width: 160px" @change="loadData">
+      <el-select v-model="query.module" placeholder="全部模块" clearable style="width: 160px" @change="handleFilterChange">
         <el-option label="商品" value="商品" />
         <el-option label="分类" value="分类" />
+        <el-option label="用户" value="用户" />
+        <el-option label="认证" value="认证" />
       </el-select>
       <div style="flex: 1" />
     </div>
@@ -60,6 +62,15 @@ const loadData = async () => {
   const res = await getLogs(params)
   tableData.value = res.data.items
   total.value = res.data.total
+  if (query.page > 1 && res.data.items.length === 0) {
+    query.page = 1
+    return loadData()
+  }
+}
+
+const handleFilterChange = () => {
+  query.page = 1
+  loadData()
 }
 
 onMounted(() => loadData())

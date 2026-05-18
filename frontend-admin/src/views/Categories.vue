@@ -2,7 +2,7 @@
   <div>
     <div class="page-card list-page-card">
       <div class="search-bar">
-      <el-input v-model="query.keyword" placeholder="搜索分类名称..." clearable style="width: 240px" @clear="loadData" @keyup.enter="loadData">
+      <el-input v-model="query.keyword" placeholder="搜索分类名称..." clearable style="width: 240px" @clear="handleFilterChange" @keyup.enter="handleFilterChange">
         <template #prefix>
           <el-icon><Search /></el-icon>
         </template>
@@ -96,6 +96,15 @@ const loadData = async () => {
   const res = await getCategories(params)
   tableData.value = res.data.items
   total.value = res.data.total
+  if (query.page > 1 && res.data.items.length === 0) {
+    query.page = 1
+    return loadData()
+  }
+}
+
+const handleFilterChange = () => {
+  query.page = 1
+  loadData()
 }
 
 const openDialog = (row) => {
@@ -128,6 +137,9 @@ const handleSubmit = async () => {
 const handleDelete = async (id) => {
   await deleteCategory(id)
   ElMessage.success('删除成功')
+  if (tableData.value.length === 1 && query.page > 1) {
+    query.page -= 1
+  }
   loadData()
 }
 
