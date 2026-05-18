@@ -25,6 +25,12 @@ const routes = [
         meta: { title: '分类管理' },
       },
       {
+        path: 'users',
+        name: 'Users',
+        component: () => import('../views/Users.vue'),
+        meta: { title: '用户管理' },
+      },
+      {
         path: 'logs',
         name: 'Logs',
         component: () => import('../views/Logs.vue'),
@@ -43,7 +49,9 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   document.title = `${to.meta.title || ''} - 商品管理系统`
   const token = localStorage.getItem('token')
-  if (to.path !== '/login' && !token) {
+  if (to.path === '/login' && token) {
+    next('/')
+  } else if (to.path !== '/login' && !token) {
     next('/login')
   } else {
     next()

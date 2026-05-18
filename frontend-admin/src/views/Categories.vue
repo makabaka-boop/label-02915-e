@@ -2,7 +2,7 @@
   <div>
     <div class="page-card list-page-card">
       <div class="search-bar">
-      <el-input v-model="query.keyword" placeholder="搜索分类名称..." clearable style="width: 240px" @clear="loadData" @keyup.enter="loadData">
+      <el-input v-model="query.keyword" placeholder="搜索分类名称..." clearable style="width: 240px" @clear="handleSearch" @keyup.enter="handleSearch">
         <template #prefix>
           <el-icon><Search /></el-icon>
         </template>
@@ -90,6 +90,11 @@ const rules = {
   name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }],
 }
 
+const handleSearch = () => {
+  query.page = 1
+  loadData()
+}
+
 const loadData = async () => {
   const params = { ...query }
   if (!params.keyword) delete params.keyword
@@ -128,6 +133,9 @@ const handleSubmit = async () => {
 const handleDelete = async (id) => {
   await deleteCategory(id)
   ElMessage.success('删除成功')
+  if (tableData.value.length === 1 && query.page > 1) {
+    query.page--
+  }
   loadData()
 }
 

@@ -2,15 +2,15 @@
   <div>
     <div class="page-card list-page-card">
       <div class="search-bar">
-        <el-input v-model="query.keyword" placeholder="搜索商品名称..." clearable style="width: 240px" @clear="loadData" @keyup.enter="loadData">
+        <el-input v-model="query.keyword" placeholder="搜索商品名称..." clearable style="width: 240px" @clear="handleSearch" @keyup.enter="handleSearch">
           <template #prefix>
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        <el-select v-model="query.category_id" placeholder="全部分类" clearable style="width: 160px" @change="loadData">
+        <el-select v-model="query.category_id" placeholder="全部分类" clearable style="width: 160px" @change="handleSearch">
           <el-option v-for="c in categoryList" :key="c.id" :label="c.name" :value="c.id" />
         </el-select>
-        <el-select v-model="query.status" placeholder="全部状态" clearable style="width: 130px" @change="loadData">
+        <el-select v-model="query.status" placeholder="全部状态" clearable style="width: 130px" @change="handleSearch">
           <el-option label="上架" :value="1" />
           <el-option label="下架" :value="0" />
         </el-select>
@@ -24,8 +24,8 @@
           <template #default="{ row }">
             <el-image
               v-if="row.image"
-              :src="row.image.startsWith('http') ? row.image : row.image"
-              :preview-src-list="[row.image.startsWith('http') ? row.image : row.image]"
+              :src="getImageUrl(row.image)"
+              :preview-src-list="[getImageUrl(row.image)]"
               fit="cover"
               style="width: 48px; height: 48px; border-radius: 8px;"
               preview-teleported
@@ -152,6 +152,18 @@ const rules = {
   price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
 }
 
+const getImageUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  if (url.startsWith('/uploads/')) return url
+  return `/api${url}`
+}
+
+const handleSearch = () => {
+  query.page = 1
+  loadData()
+}
+
 const loadData = async () => {
   const params = { ...query }
   if (!params.keyword) delete params.keyword
@@ -217,6 +229,9 @@ const handleSubmit = async () => {
 const handleDelete = async (id) => {
   await deleteProduct(id)
   ElMessage.success('删除成功')
+  if (tableData.value.length === 1 && query.page > 1) {
+    query.page--
+  }
   loadData()
 }
 

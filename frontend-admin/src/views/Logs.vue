@@ -1,9 +1,11 @@
 <template>
   <div class="page-card list-page-card">
     <div class="search-bar">
-      <el-select v-model="query.module" placeholder="全部模块" clearable style="width: 160px" @change="loadData">
+      <el-select v-model="query.module" placeholder="全部模块" clearable style="width: 160px" @change="handleSearch">
         <el-option label="商品" value="商品" />
         <el-option label="分类" value="分类" />
+        <el-option label="用户" value="用户" />
+        <el-option label="认证" value="认证" />
       </el-select>
       <div style="flex: 1" />
     </div>
@@ -53,6 +55,11 @@ const formatTime = (val) => {
 const tableData = ref([])
 const total = ref(0)
 const query = reactive({ page: 1, page_size: 10, module: '' })
+
+const handleSearch = () => {
+  query.page = 1
+  loadData()
+}
 
 const loadData = async () => {
   const params = { ...query }
