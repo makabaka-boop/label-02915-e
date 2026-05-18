@@ -2,15 +2,15 @@
   <div>
     <div class="page-card list-page-card">
       <div class="search-bar">
-        <el-input v-model="query.keyword" placeholder="搜索商品名称..." clearable style="width: 240px" @clear="loadData" @keyup.enter="loadData">
+        <el-input v-model="query.keyword" placeholder="搜索商品名称..." clearable style="width: 240px" @clear="loadData(true)" @keyup.enter="loadData(true)">
           <template #prefix>
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        <el-select v-model="query.category_id" placeholder="全部分类" clearable style="width: 160px" @change="loadData">
+        <el-select v-model="query.category_id" placeholder="全部分类" clearable style="width: 160px" @change="loadData(true)">
           <el-option v-for="c in categoryList" :key="c.id" :label="c.name" :value="c.id" />
         </el-select>
-        <el-select v-model="query.status" placeholder="全部状态" clearable style="width: 130px" @change="loadData">
+        <el-select v-model="query.status" placeholder="全部状态" clearable style="width: 130px" @change="loadData(true)">
           <el-option label="上架" :value="1" />
           <el-option label="下架" :value="0" />
         </el-select>
@@ -24,8 +24,8 @@
           <template #default="{ row }">
             <el-image
               v-if="row.image"
-              :src="row.image.startsWith('http') ? row.image : row.image"
-              :preview-src-list="[row.image.startsWith('http') ? row.image : row.image]"
+              :src="resolveImageUrl(row.image)"
+              :preview-src-list="[resolveImageUrl(row.image)]"
               fit="cover"
               style="width: 48px; height: 48px; border-radius: 8px;"
               preview-teleported
@@ -152,7 +152,8 @@ const rules = {
   price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
 }
 
-const loadData = async () => {
+const loadData = async (resetPage = false) => {
+  if (resetPage) query.page = 1
   const params = { ...query }
   if (!params.keyword) delete params.keyword
   if (!params.category_id) delete params.category_id
@@ -160,6 +161,16 @@ const loadData = async () => {
   const res = await getProducts(params)
   tableData.value = res.data.items
   total.value = res.data.total
+  if (tableData.value.length === 0 && query.page > 1) {
+    query.page = Math.max(1, Math.ceil(total.value / query.page_size))
+    const retryParams = { ...query }
+    if (!retryParams.keyword) delete retryParams.keyword
+    if (!retryParams.category_id) delete retryParams.category_id
+    if (retryParams.status === null || retryParams.status === '') delete retryParams.status
+    const retryRes = await getProducts(retryParams)
+    tableData.value = retryRes.data.items
+    total.value = retryRes.data.total
+  }
 }
 
 const loadCategories = async () => {
@@ -167,13 +178,14 @@ const loadCategories = async () => {
   categoryList.value = res.data
 }
 
-const imagePreviewUrl = computed(() => {
-  if (!form.image) return ''
-  if (form.image.startsWith('http')) return form.image
-  // /uploads/ 路径由 nginx 直接代理到后端，不需要 /api 前缀
-  if (form.image.startsWith('/uploads/')) return form.image
-  return `/api${form.image}`
-})
+const resolveImageUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  if (url.startsWith('/uploads/')) return url
+  return `/api${url}`
+}
+
+const imagePreviewUrl = computed(() => resolveImageUrl(form.image))
 
 const handleUpload = async ({ file }) => {
   try {

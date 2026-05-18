@@ -2,7 +2,7 @@
   <div>
     <div class="page-card list-page-card">
       <div class="search-bar">
-      <el-input v-model="query.keyword" placeholder="搜索分类名称..." clearable style="width: 240px" @clear="loadData" @keyup.enter="loadData">
+      <el-input v-model="query.keyword" placeholder="搜索分类名称..." clearable style="width: 240px" @clear="loadData(true)" @keyup.enter="loadData(true)">
         <template #prefix>
           <el-icon><Search /></el-icon>
         </template>
@@ -90,12 +90,21 @@ const rules = {
   name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }],
 }
 
-const loadData = async () => {
+const loadData = async (resetPage = false) => {
+  if (resetPage) query.page = 1
   const params = { ...query }
   if (!params.keyword) delete params.keyword
   const res = await getCategories(params)
   tableData.value = res.data.items
   total.value = res.data.total
+  if (tableData.value.length === 0 && query.page > 1) {
+    query.page = Math.max(1, Math.ceil(total.value / query.page_size))
+    const retryParams = { ...query }
+    if (!retryParams.keyword) delete retryParams.keyword
+    const retryRes = await getCategories(retryParams)
+    tableData.value = retryRes.data.items
+    total.value = retryRes.data.total
+  }
 }
 
 const openDialog = (row) => {

@@ -1,9 +1,11 @@
 <template>
   <div class="page-card list-page-card">
     <div class="search-bar">
-      <el-select v-model="query.module" placeholder="全部模块" clearable style="width: 160px" @change="loadData">
+      <el-select v-model="query.module" placeholder="全部模块" clearable style="width: 160px" @change="loadData(true)">
         <el-option label="商品" value="商品" />
         <el-option label="分类" value="分类" />
+        <el-option label="用户" value="用户" />
+        <el-option label="认证" value="认证" />
       </el-select>
       <div style="flex: 1" />
     </div>
@@ -54,12 +56,21 @@ const tableData = ref([])
 const total = ref(0)
 const query = reactive({ page: 1, page_size: 10, module: '' })
 
-const loadData = async () => {
+const loadData = async (resetPage = false) => {
+  if (resetPage) query.page = 1
   const params = { ...query }
   if (!params.module) delete params.module
   const res = await getLogs(params)
   tableData.value = res.data.items
   total.value = res.data.total
+  if (tableData.value.length === 0 && query.page > 1) {
+    query.page = Math.max(1, Math.ceil(total.value / query.page_size))
+    const retryParams = { ...query }
+    if (!retryParams.module) delete retryParams.module
+    const retryRes = await getLogs(retryParams)
+    tableData.value = retryRes.data.items
+    total.value = retryRes.data.total
+  }
 }
 
 onMounted(() => loadData())

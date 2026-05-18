@@ -21,6 +21,10 @@
           <el-icon><Grid /></el-icon>
           <span>分类管理</span>
         </el-menu-item>
+        <el-menu-item index="/users">
+          <el-icon><User /></el-icon>
+          <span>用户管理</span>
+        </el-menu-item>
         <el-menu-item index="/logs">
           <el-icon><Document /></el-icon>
           <span>操作日志</span>
